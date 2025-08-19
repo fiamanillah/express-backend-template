@@ -4,22 +4,21 @@ import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 
-import { Logger } from 'winston';
 import { AppError } from './errors/AppError';
 import { errorHandler } from './errors/errorHandler';
 import { Context } from './Context';
 import { IgnitorModule } from './IgnitorModule';
+import { Logger, loggers } from 'winston';
+import { AppLogger } from './logging/logger';
 
 export class IgnitorApp {
     private app: Express;
     private context: Context;
     private modules: IgnitorModule[] = [];
-    private logger: Logger;
     private isProduction: boolean;
 
     constructor() {
         this.app = express();
-        this.logger = new Logger();
         this.isProduction = process.env.NODE_ENV === 'production';
         this.context = new Context();
 
@@ -56,7 +55,7 @@ export class IgnitorApp {
 
         // Request logging
         this.app.use((req: Request, res: Response, next: NextFunction) => {
-            this.logger.info(`${req.method} ${req.path}`);
+            AppLogger.info(`${req.method} ${req.path}`);
             next();
         });
 
@@ -71,29 +70,29 @@ export class IgnitorApp {
 
     public registerModule(module: IgnitorModule): void {
         this.modules.push(module);
-        this.logger.debug(`Module registered: ${module.name}`);
+        AppLogger.debug(`Module registered: ${module.name}`);
     }
 
     public async initializeModules(): Promise<void> {
         for (const module of this.modules) {
             try {
-                this.logger.info(`Initializing module: ${module.name}`);
+                AppLogger.info(`Initializing module: ${module.name}`);
                 await module.initialize(this.context);
-                this.logger.info(`Module initialized: ${module.name}`);
+                AppLogger.info(`Module initialized: ${module.name}`);
             } catch (error) {
-                this.logger.error(`Failed to initialize module ${module.name}`, error);
+                AppLogger.error(`Failed to initialize module ${module.name}`, error);
                 throw error;
             }
         }
     }
 
-    public async start(port: number): Promise<void> {
+    public async spark(port: number): Promise<void> {
         try {
             await this.context.initialize();
             await this.initializeModules();
 
             // Error handling (must be after all routes)
-            this.app.use(errorHandler(this.logger));
+            this.app.use(errorHandler(AppLogger));
 
             // 404 handler
             this.app.use((req: Request, res: Response) => {
@@ -101,14 +100,14 @@ export class IgnitorApp {
             });
 
             this.app.listen(port, () => {
-                this.logger.info(
+                AppLogger.info(
                     `Server running on port ${port} in ${
                         process.env.NODE_ENV || 'development'
                     } mode`
                 );
             });
         } catch (error) {
-            this.logger.error('Failed to start server:', error);
+            AppLogger.error('Failed to start server:', error);
             process.exit(1);
         }
     }

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '@/core/errors/AppError';
 import { isPlainObject } from 'lodash';
-import { Logger } from 'winston';
+import { AppLogger } from '../logging/logger';
 
 interface ErrorResponse {
     success: false;
@@ -15,7 +15,7 @@ interface ErrorResponse {
     };
 }
 
-export function errorHandler(logger: Logger) {
+export function errorHandler(logger: AppLogger) {
     return (err: unknown, req: Request, res: Response, next: NextFunction) => {
         // Extract error information
         const error = err instanceof Error ? err : new Error(String(err));
@@ -46,7 +46,7 @@ export function errorHandler(logger: Logger) {
         };
 
         // Log the error with context
-        logger.error('Request processing error', logDetails);
+        AppLogger.error('Request processing error', logDetails);
 
         // Prepare client response
         const response: ErrorResponse = {

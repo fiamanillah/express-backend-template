@@ -27,5 +27,18 @@
         "titleBar.inactiveBackground": "#5db8ac99",
         "titleBar.inactiveForeground": "#15202b99"
     },
-    "peacock.color": "#81c8be"
+    "peacock.color": "#81c8be",
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "103.161.9.29",
+            "port": 4565,
+            "driver": "PostgreSQL",
+            "name": "test",
+            "group": "test",
+            "database": "test",
+            "username": "test",
+            "password": "test"
+        }
+    ]
 }
