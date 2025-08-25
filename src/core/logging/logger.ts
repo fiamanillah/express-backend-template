@@ -1,142 +1,101 @@
-import { createLogger, format, transports } from 'winston';
+// logging/logger.ts
+import { createLogger, format, transports, Logger } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
 import chalk from 'chalk';
 import { format as dateFnsFormat } from 'date-fns';
+import { config } from '../config';
 
-const { combine, timestamp, printf, errors } = format;
+const { combine, timestamp, printf, errors, json } = format;
 
-// Constants
 const LOG_DIR = 'logs';
-const MAX_FILE_SIZE = '5m'; // 5MB
-const MAX_FILES = '14d'; // Keep 14 days of logs
 
-// Emojis + Colors per log level
-const levelStyles: Record<string, { emoji: string; color: (msg: string) => string }> = {
-    error: { emoji: '❌', color: chalk.red.bold },
-    warn: { emoji: '⚠️', color: chalk.yellow.bold },
-    info: { emoji: 'ℹ️', color: chalk.cyan.bold },
-    http: { emoji: '🌐', color: chalk.magenta.bold },
-    verbose: { emoji: '🔍', color: chalk.blue },
-    debug: { emoji: '🐛', color: chalk.green },
-    silly: { emoji: '🤪', color: chalk.gray },
-};
+// Console format with colors/emojis
+const consoleFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
+    const styles: Record<string, { emoji: string; color: (msg: string) => string }> = {
+        error: { emoji: '❌', color: chalk.red.bold },
+        warn: { emoji: '⚠️', color: chalk.yellow.bold },
+        info: { emoji: 'ℹ️', color: chalk.cyan.bold },
+        http: { emoji: '🌐', color: chalk.magenta.bold },
+        verbose: { emoji: '🔍', color: chalk.blue },
+        debug: { emoji: '🐛', color: chalk.green },
+        silly: { emoji: '🤪', color: chalk.gray },
+    };
+    const style = styles[level] || { emoji: '📝', color: chalk.white };
+
+    const time = chalk.dim(timestamp);
+    const lvl = style.color(level.toUpperCase().padEnd(7));
+    const emoji = style.emoji;
+
+    return `${emoji} ${time} ${lvl}  ${stack || message}`;
+});
 
 export class AppLogger {
-    private static instance: ReturnType<typeof createLogger>;
-    private static logDir = path.join(process.cwd(), LOG_DIR);
+    private static instance: Logger;
 
-    private constructor() {} // Prevent instantiation
-
-    private static initialize(): ReturnType<typeof createLogger> {
-        if (!AppLogger.instance) {
-            // Custom log format
-            const logFormat = printf(({ level, message, timestamp, stack }) => {
-                const style = levelStyles[level] || {
-                    emoji: '📝',
-                    color: chalk.white,
-                };
-
-                const time = chalk.dim(timestamp); // gray timestamp
-                const lvl = style.color(level.toUpperCase().padEnd(7)); // aligned level
-                const emoji = style.emoji;
-
-                // Handle errors nicely (stack on new lines)
-                const logMsg = message instanceof Error ? message.stack : stack || message;
-
-                return `${emoji} ${time} ${lvl}  ${logMsg}`;
-            });
-
-            // File rotation transport
-            const fileRotateTransport = new DailyRotateFile({
-                filename: path.join(AppLogger.logDir, 'application-%DATE%.log'),
-                datePattern: 'YYYY-MM-DD',
-                zippedArchive: true,
-                maxSize: MAX_FILE_SIZE,
-                maxFiles: MAX_FILES,
-                format: combine(errors({ stack: true }), timestamp(), logFormat),
-            });
-
-            AppLogger.instance = createLogger({
-                level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+    private static init(): Logger {
+        if (!this.instance) {
+            this.instance = createLogger({
+                level: config.logging.level,
+                exitOnError: false,
                 format: combine(
                     errors({ stack: true }),
                     timestamp({
                         format: () => dateFnsFormat(new Date(), 'yyyy-MM-dd HH:mm:ss.SSS'),
-                    }),
-                    logFormat
+                    })
                 ),
                 transports: [
                     new transports.Console({
-                        format: combine(logFormat),
+                        format: combine(consoleFormat),
                     }),
-                    fileRotateTransport,
-                    new transports.File({
-                        filename: path.join(AppLogger.logDir, 'error.log'),
-                        level: 'error',
-                        format: combine(errors({ stack: true }), timestamp(), logFormat),
+                    new DailyRotateFile({
+                        dirname: LOG_DIR,
+                        filename: 'app-%DATE%.json',
+                        datePattern: 'YYYY-MM-DD',
+                        maxFiles: '14d',
+                        maxSize: '5m',
+                        format: combine(json()), // structured JSON for files
                     }),
                 ],
-                exitOnError: false,
                 exceptionHandlers: [
-                    new transports.File({
-                        filename: path.join(AppLogger.logDir, 'exceptions.log'),
+                    new DailyRotateFile({
+                        dirname: LOG_DIR,
+                        filename: 'exceptions-%DATE%.json',
+                        datePattern: 'YYYY-MM-DD',
+                        format: combine(json()),
                     }),
                 ],
                 rejectionHandlers: [
-                    new transports.File({
-                        filename: path.join(AppLogger.logDir, 'rejections.log'),
+                    new DailyRotateFile({
+                        dirname: LOG_DIR,
+                        filename: 'rejections-%DATE%.json',
+                        datePattern: 'YYYY-MM-DD',
+                        format: combine(json()),
                     }),
                 ],
             });
-
-            // Handle uncaught rejections
-            process.on('unhandledRejection', reason => {
-                AppLogger.instance.error(
-                    'Unhandled Rejection:',
-                    reason instanceof Error ? reason.stack : String(reason)
-                );
-            });
         }
-
-        return AppLogger.instance;
+        return this.instance;
     }
 
-    public static getLogger(): ReturnType<typeof createLogger> {
-        return AppLogger.initialize();
+    static get logger(): Logger {
+        return this.init();
     }
 
-    public static info(message: string, meta?: any): void {
-        AppLogger.initialize().info(message, meta);
+    static info(msg: string, meta?: any) {
+        this.logger.info(msg, meta);
     }
-
-    public static warn(message: string, meta?: any): void {
-        AppLogger.initialize().warn(message, meta);
+    static warn(msg: string, meta?: any) {
+        this.logger.warn(msg, meta);
     }
-
-    public static error(message: string | Error, meta?: any): void {
-        if (message instanceof Error) {
-            AppLogger.initialize().error(message.stack || message.message, {
-                ...meta,
-                error: message,
-            });
+    static error(msg: string | Error, meta?: any) {
+        if (msg instanceof Error) {
+            this.logger.error(msg.message, { ...meta, stack: msg.stack });
         } else {
-            AppLogger.initialize().error(message, meta);
+            this.logger.error(msg, meta);
         }
     }
-
-    public static debug(message: string, meta?: any): void {
-        AppLogger.initialize().debug(message, meta);
-    }
-
-    public static verbose(message: string, meta?: any): void {
-        AppLogger.initialize().verbose(message, meta);
-    }
-
-    public static log(level: string, message: string, meta?: any): void {
-        AppLogger.initialize().log(level, message, meta);
+    static debug(msg: string, meta?: any) {
+        this.logger.debug(msg, meta);
     }
 }
-
-// Initialize logger on import
-AppLogger.getLogger();

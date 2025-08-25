@@ -1,76 +1,48 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '@/core/errors/AppError';
-import { isPlainObject } from 'lodash';
+import { AppError } from './AppError';
 import { AppLogger } from '../logging/logger';
 
-interface ErrorResponse {
-    success: false;
-    error: {
-        message: string;
-        code?: string;
-        details?: unknown;
-        timestamp?: string;
-        path?: string;
-        method?: string;
-    };
-}
-
-export function errorHandler(logger: AppLogger) {
+export function errorHandler() {
     return (err: unknown, req: Request, res: Response, next: NextFunction) => {
-        // Extract error information
+        // CRITICAL: Check if response was already sent
+        if (res.headersSent) {
+            return next(err);
+        }
+
         const error = err instanceof Error ? err : new Error(String(err));
         const isAppError = err instanceof AppError;
-        const isDevelopment = process.env.NODE_ENV === 'development';
 
-        // Prepare error details for logging
-        const logDetails = {
-            error: {
-                name: error.name,
-                message: error.message,
-                stack: error.stack,
-                ...(isAppError && {
-                    code: err.code,
-                    statusCode: err.statusCode,
-                    details: err.details,
-                }),
-            },
-            request: {
-                method: req.method,
+        // Auto-log errors (no need for manual logging in each route)
+        if (isAppError && (err as AppError).statusCode < 500) {
+            AppLogger.warn(error.message, {
+                code: (err as AppError).code,
+                statusCode: (err as AppError).statusCode,
                 path: req.path,
-                params: req.params,
-                query: req.query,
-                body: req.body,
-                ip: req.ip,
-                user: (req as any).user?.id, // Assuming user might be attached to request
-            },
-        };
+                requestId: req.id,
+            });
+        } else {
+            AppLogger.error(error.message, {
+                stack: error.stack,
+                path: req.path,
+                requestId: req.id,
+            });
+        }
 
-        // Log the error with context
-        AppLogger.error('Request processing error', logDetails);
+        // Client response
+        const statusCode = isAppError ? (err as AppError).statusCode : 500;
+        const message = isAppError ? error.message : 'Internal Server Error';
+        const code = isAppError ? (err as AppError).code : 'INTERNAL_ERROR';
 
-        // Prepare client response
-        const response: ErrorResponse = {
+        res.status(statusCode).json({
             success: false,
             error: {
-                message: isAppError ? error.message : 'Internal Server Error',
-                ...(isAppError && { code: err.code }),
-                ...(isDevelopment && {
-                    details: isAppError
-                        ? err.details
-                        : error.stack?.split('\n').map(line => line.trim()),
+                message,
+                code,
+                ...(process.env.NODE_ENV === 'development' && {
+                    details: isAppError ? (err as AppError).details : undefined,
+                    stack: error.stack,
                 }),
-                timestamp: new Date().toISOString(),
-                path: req.path,
-                method: req.method,
             },
-        };
-
-        // Send response with appropriate status code
-        res.status(isAppError ? err.statusCode : 500).json(response);
-
-        // In development, consider logging to console as well
-        if (isDevelopment) {
-            console.error('Error handler:', error);
-        }
+        });
     };
 }

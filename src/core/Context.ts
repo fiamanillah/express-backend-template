@@ -20,4 +20,14 @@ export class Context {
             throw error;
         }
     }
+
+    public async shutdown(): Promise<void> {
+        try {
+            await this.prisma.$disconnect();
+            AppLogger.info('Database disconnected successfully');
+        } catch (error) {
+            AppLogger.error('Database disconnection failed', error);
+            throw error;
+        }
+    }
 }

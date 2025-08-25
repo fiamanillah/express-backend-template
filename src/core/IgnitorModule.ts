@@ -1,6 +1,8 @@
 import { Context } from './Context';
 
-export abstract class IgnitorModule {
-    abstract name: string;
-    abstract initialize(context: Context): Promise<void>;
+export interface IgnitorModule {
+    name: string;
+    dependencies?: string[];
+    initialize(context: Context): Promise<void>;
+    onShutdown?(): Promise<void>;
 }

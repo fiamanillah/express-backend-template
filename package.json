@@ -20,8 +20,11 @@
         "helmet": "^8.1.0",
         "jsonwebtoken": "^9.0.2",
         "lodash": "^4.17.21",
+        "morgan": "^1.10.1",
+        "uuid": "^11.1.0",
         "winston": "^3.17.0",
-        "winston-daily-rotate-file": "^5.0.0"
+        "winston-daily-rotate-file": "^5.0.0",
+        "zod": "^4.1.1"
     },
     "devDependencies": {
         "@types/bun": "latest",
