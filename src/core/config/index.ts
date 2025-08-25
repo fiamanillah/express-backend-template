@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import { Logger } from 'winston';
+import { AppLogger } from '../logging/logger';
 
 // Load environment variables
 dotenv.config({
@@ -15,8 +15,7 @@ const requiredEnvVars = ['DATABASE_URL', 'PORT'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
-    const logger = new Logger();
-    logger.error(`Missing required environment variables: ${missingVars.join(', ')}`);
+    AppLogger.error(`Missing required environment variables: ${missingVars.join(', ')}`);
     process.exit(1);
 }
 
