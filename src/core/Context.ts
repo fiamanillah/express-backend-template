@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import { config } from './config';
 import { AppLogger } from './logging/logger';
+import { config } from './config';
 
 export class Context {
     public prisma: PrismaClient;
@@ -14,9 +14,9 @@ export class Context {
     public async initialize(): Promise<void> {
         try {
             await this.prisma.$connect();
-            AppLogger.info('Database connected successfully');
+            AppLogger.info('🗄️ Database connected successfully');
         } catch (error) {
-            AppLogger.error('Database connection failed', error);
+            AppLogger.error('❌ Database connection failed', error);
             throw error;
         }
     }
@@ -24,9 +24,9 @@ export class Context {
     public async shutdown(): Promise<void> {
         try {
             await this.prisma.$disconnect();
-            AppLogger.info('Database disconnected successfully');
+            AppLogger.info('🗄️ Database disconnected successfully');
         } catch (error) {
-            AppLogger.error('Database disconnection failed', error);
+            AppLogger.error('❌ Database disconnection failed', error);
             throw error;
         }
     }

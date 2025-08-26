@@ -1,28 +1,50 @@
 import { AppLogger } from '@/core/logging/logger';
 import { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 
 export function requestLogger() {
     return (req: Request, res: Response, next: NextFunction) => {
         const start = Date.now();
 
-        // Log request
-        AppLogger.info(`${req.method} ${req.path}`, {
-            requestId: req.id,
-            ip: req.ip,
+        // Ensure requestId exists
+        const requestId = (req as any).id || crypto.randomUUID();
+        (req as any).id = requestId;
+
+        // Capture basic request info
+        const requestMeta = {
+            requestId,
+            ip: req.headers['x-forwarded-for'] || req.ip,
+            method: req.method,
+            path: req.originalUrl || req.url,
             userAgent: req.get('User-Agent'),
             query: req.query,
             params: req.params,
-        });
+            ...(process.env.NODE_ENV === 'development' && req.body ? { body: req.body } : {}), // log body only in dev
+        };
 
-        // Log response
+        // Listen for response end
         res.on('finish', () => {
             const duration = Date.now() - start;
-            AppLogger.info(`${req.method} ${req.path} ${res.statusCode}`, {
-                requestId: req.id,
+
+            const responseMeta = {
+                ...requestMeta,
                 statusCode: res.statusCode,
-                duration: `${duration}ms`,
-                contentLength: res.get('Content-Length'),
-            });
+                durationMs: duration,
+                contentLength: res.get('Content-Length') || 0,
+            };
+
+            AppLogger.info(`📩 HTTP Request completed`, responseMeta);
+        });
+
+        // Listen for aborted requests
+        res.on('close', () => {
+            if (!res.writableEnded) {
+                const duration = Date.now() - start;
+                AppLogger.warn(`⚠️ HTTP Request aborted by client`, {
+                    ...requestMeta,
+                    durationMs: duration,
+                });
+            }
         });
 
         next();

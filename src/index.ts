@@ -5,15 +5,13 @@ import { config } from './core/config';
 // Main application bootstrap function
 async function bootstrap() {
     try {
-        AppLogger.info('Starting application bootstrap');
+        AppLogger.info('📦 Starting application bootstrap');
 
         // Initialize the Ignitor application
         const app = new IgnitorApp();
 
         // Register application modules
         // TODO: Add your modules here when needed
-
-        console.log('🚀 About to start server on port:', config.server.port);
 
         // Start the server
         await app.spark(config.server.port);
@@ -22,11 +20,11 @@ async function bootstrap() {
         process.on('SIGTERM', () => shutdown(app));
         process.on('SIGINT', () => shutdown(app));
 
-        AppLogger.info('Application started successfully');
+        AppLogger.info('💥 Ignitor sparked successfully');
     } catch (error) {
-        console.error('❌ Bootstrap error details:', error);
+        AppLogger.error('❌ Bootstrap error details:', error);
 
-        AppLogger.error('Failed to initialize application:', {
+        AppLogger.error('🔴 Failed to initialize application:', {
             error: error instanceof Error ? error : new Error(String(error)),
             context: 'application-initialization',
             stack: error instanceof Error ? error.stack : undefined,
@@ -45,7 +43,7 @@ async function shutdown(app: IgnitorApp) {
         AppLogger.info('Graceful shutdown completed');
         process.exit(0);
     } catch (error) {
-        console.error('❌ Shutdown error details:', error);
+        AppLogger.error('❌ Shutdown error details:', error);
 
         AppLogger.error('Error during graceful shutdown:', {
             error: error instanceof Error ? error : new Error(String(error)),
@@ -58,7 +56,7 @@ async function shutdown(app: IgnitorApp) {
 
 // Start the application
 bootstrap().catch(err => {
-    console.error('❌ Unhandled bootstrap error:', err);
+    AppLogger.error('❌ Unhandled bootstrap error:', err);
     AppLogger.error('Bootstrap error:', {
         error: err instanceof Error ? err : new Error(String(err)),
         stack: err instanceof Error ? err.stack : undefined,

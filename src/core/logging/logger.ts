@@ -27,7 +27,10 @@ const consoleFormat = printf(({ level, message, timestamp, stack, ...meta }) => 
     const lvl = style.color(level.toUpperCase().padEnd(7));
     const emoji = style.emoji;
 
-    return `${emoji} ${time} ${lvl}  ${stack || message}`;
+    // show metadata if available
+    const metaString = meta && Object.keys(meta).length ? chalk.gray(JSON.stringify(meta)) : '';
+
+    return `${emoji} ${time} ${lvl}  ${stack || message} ${metaString}`;
 });
 
 export class AppLogger {
@@ -97,5 +100,11 @@ export class AppLogger {
     }
     static debug(msg: string, meta?: any) {
         this.logger.debug(msg, meta);
+    }
+    static verbose(msg: string, meta?: any) {
+        this.logger.verbose(msg, meta);
+    }
+    static silly(msg: string, meta?: any) {
+        this.logger.silly(msg, meta);
     }
 }
