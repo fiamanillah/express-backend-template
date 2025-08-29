@@ -24,6 +24,11 @@ export interface PaginationResult<T> {
     hasPrevious: boolean;
 }
 
+// Type for Prisma transaction callback
+type TransactionCallback<T> = (
+    tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>
+) => Promise<T>;
+
 export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput = any> {
     protected prisma: PrismaClient;
     protected modelName: string;
@@ -72,7 +77,7 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
                 const totalPages = Math.ceil(total / pagination.limit);
 
                 return {
-                    data,
+                    data: data as TModel[],
                     total,
                     page: pagination.page,
                     limit: pagination.limit,
@@ -82,13 +87,15 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
                 };
             }
 
-            return await this.getModel().findMany({
+            const result = await this.getModel().findMany({
                 where,
                 include,
                 orderBy,
             });
+
+            return result as TModel[];
         } catch (error) {
-            this.handleDatabaseError(error, 'findMany');
+            return this.handleDatabaseError(error, 'findMany');
         }
     }
 
@@ -99,12 +106,14 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
         try {
             const where = this.buildWhereClause({ id });
 
-            return await this.getModel().findFirst({
+            const result = await this.getModel().findFirst({
                 where,
                 include,
             });
+
+            return result as TModel | null;
         } catch (error) {
-            this.handleDatabaseError(error, 'findById');
+            return this.handleDatabaseError(error, 'findById');
         }
     }
 
@@ -115,12 +124,14 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
         try {
             const where = this.buildWhereClause(filters);
 
-            return await this.getModel().findFirst({
+            const result = await this.getModel().findFirst({
                 where,
                 include,
             });
+
+            return result as TModel | null;
         } catch (error) {
-            this.handleDatabaseError(error, 'findOne');
+            return this.handleDatabaseError(error, 'findOne');
         }
     }
 
@@ -131,12 +142,14 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
         try {
             const createData = this.prepareCreateData(data);
 
-            return await this.getModel().create({
+            const result = await this.getModel().create({
                 data: createData,
                 include,
             });
+
+            return result as TModel;
         } catch (error) {
-            this.handleDatabaseError(error, 'create');
+            return this.handleDatabaseError(error, 'create');
         }
     }
 
@@ -149,16 +162,17 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
         include?: any
     ): Promise<TModel> {
         try {
-            const where = this.buildWhereClause({ id });
             const updateData = this.prepareUpdateData(data);
 
-            return await this.getModel().update({
+            const result = await this.getModel().update({
                 where: { id },
                 data: updateData,
                 include,
             });
+
+            return result as TModel;
         } catch (error) {
-            this.handleDatabaseError(error, 'updateById');
+            return this.handleDatabaseError(error, 'updateById');
         }
     }
 
@@ -171,11 +185,13 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
                 return await this.softDelete(id);
             }
 
-            return await this.getModel().delete({
+            const result = await this.getModel().delete({
                 where: { id },
             });
+
+            return result as TModel;
         } catch (error) {
-            this.handleDatabaseError(error, 'deleteById');
+            return this.handleDatabaseError(error, 'deleteById');
         }
     }
 
@@ -184,14 +200,16 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
      */
     protected async softDelete(id: string | number): Promise<TModel> {
         try {
-            return await this.getModel().update({
+            const result = await this.getModel().update({
                 where: { id },
                 data: {
                     deletedAt: new Date(),
                 },
             });
+
+            return result as TModel;
         } catch (error) {
-            this.handleDatabaseError(error, 'softDelete');
+            return this.handleDatabaseError(error, 'softDelete');
         }
     }
 
@@ -204,7 +222,7 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
             const count = await this.getModel().count({ where });
             return count > 0;
         } catch (error) {
-            this.handleDatabaseError(error, 'exists');
+            return this.handleDatabaseError(error, 'exists');
         }
     }
 
@@ -216,7 +234,7 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
             const where = this.buildWhereClause(filters);
             return await this.getModel().count({ where });
         } catch (error) {
-            this.handleDatabaseError(error, 'count');
+            return this.handleDatabaseError(error, 'count');
         }
     }
 
@@ -283,11 +301,11 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
     /**
      * Execute a database transaction
      */
-    protected async transaction<T>(callback: (tx: PrismaClient) => Promise<T>): Promise<T> {
+    protected async transaction<T>(callback: TransactionCallback<T>): Promise<T> {
         try {
             return await this.prisma.$transaction(callback);
         } catch (error) {
-            this.handleDatabaseError(error, 'transaction');
+            return this.handleDatabaseError(error, 'transaction');
         }
     }
 }

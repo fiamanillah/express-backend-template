@@ -4,13 +4,6 @@ import { BaseController } from '@/core/BaseController';
 import { UserService } from './user.service';
 import { AppLogger } from '@/core/logging/logger';
 import { NotFoundError } from '@/core/errors/AppError';
-import {
-    CreateUserInput,
-    UpdateUserInput,
-    UpdateUserProfileInput,
-    UserListQuery,
-    UserIdParams,
-} from './user.validation';
 
 export class UserController extends BaseController {
     constructor(private userService: UserService) {
@@ -21,10 +14,11 @@ export class UserController extends BaseController {
      * Get all users with optional filtering and pagination
      * GET /api/users
      */
-    public getUsers = async (req: Request<{}, {}, {}, UserListQuery>, res: Response) => {
-        this.logAction('getUsers', req as any, { query: req.query });
+    public getUsers = async (req: Request, res: Response) => {
+        const query = req.query as any; // Validated by middleware
+        this.logAction('getUsers', req, { query });
 
-        const result = await this.userService.getUsers(req.query);
+        const result = await this.userService.getUsers(query);
 
         if (typeof result === 'object' && 'data' in result) {
             // Paginated response
@@ -51,8 +45,8 @@ export class UserController extends BaseController {
      * Get a single user by ID
      * GET /api/users/:id
      */
-    public getUserById = async (req: Request<UserIdParams>, res: Response) => {
-        const { id } = req.params;
+    public getUserById = async (req: Request, res: Response) => {
+        const { id } = req.params; // Validated by middleware
         const userId = parseInt(id);
 
         this.logAction('getUserById', req, { userId });
@@ -65,10 +59,11 @@ export class UserController extends BaseController {
      * Create a new user
      * POST /api/users
      */
-    public createUser = async (req: Request<{}, {}, CreateUserInput>, res: Response) => {
-        this.logAction('createUser', req, { email: req.body.email });
+    public createUser = async (req: Request, res: Response) => {
+        const body = req.body as any; // Validated by middleware
+        this.logAction('createUser', req, { email: body.email });
 
-        const user = await this.userService.createUser(req.body);
+        const user = await this.userService.createUser(body);
         return this.sendCreatedResponse(res, user, 'User created successfully');
     };
 
@@ -76,13 +71,14 @@ export class UserController extends BaseController {
      * Update a user
      * PUT /api/users/:id
      */
-    public updateUser = async (req: Request<UserIdParams, {}, UpdateUserInput>, res: Response) => {
-        const { id } = req.params;
+    public updateUser = async (req: Request, res: Response) => {
+        const { id } = req.params; // Validated by middleware
+        const body = req.body as any; // Validated by middleware
         const userId = parseInt(id);
 
-        this.logAction('updateUser', req, { userId, updatedFields: Object.keys(req.body) });
+        this.logAction('updateUser', req, { userId, updatedFields: Object.keys(body) });
 
-        const user = await this.userService.updateUser(userId, req.body);
+        const user = await this.userService.updateUser(userId, body);
         return this.sendResponse(res, user, 'User updated successfully');
     };
 
@@ -90,16 +86,14 @@ export class UserController extends BaseController {
      * Update user profile
      * PUT /api/users/:id/profile
      */
-    public updateUserProfile = async (
-        req: Request<UserIdParams, {}, UpdateUserProfileInput>,
-        res: Response
-    ) => {
-        const { id } = req.params;
+    public updateUserProfile = async (req: Request, res: Response) => {
+        const { id } = req.params; // Validated by middleware
+        const body = req.body as any; // Validated by middleware
         const userId = parseInt(id);
 
         this.logAction('updateUserProfile', req, { userId });
 
-        const profile = await this.userService.updateUserProfile(userId, req.body);
+        const profile = await this.userService.updateUserProfile(userId, body);
         return this.sendResponse(res, profile, 'User profile updated successfully');
     };
 
@@ -107,8 +101,8 @@ export class UserController extends BaseController {
      * Delete a user
      * DELETE /api/users/:id
      */
-    public deleteUser = async (req: Request<UserIdParams>, res: Response) => {
-        const { id } = req.params;
+    public deleteUser = async (req: Request, res: Response) => {
+        const { id } = req.params; // Validated by middleware
         const userId = parseInt(id);
 
         this.logAction('deleteUser', req, { userId });
@@ -121,8 +115,8 @@ export class UserController extends BaseController {
      * Get user statistics
      * GET /api/users/:id/stats
      */
-    public getUserStats = async (req: Request<UserIdParams>, res: Response) => {
-        const { id } = req.params;
+    public getUserStats = async (req: Request, res: Response) => {
+        const { id } = req.params; // Validated by middleware
         const userId = parseInt(id);
 
         this.logAction('getUserStats', req, { userId });

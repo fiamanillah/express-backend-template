@@ -1,5 +1,5 @@
 // src/modules/User/user.routes.ts
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { UserController } from './user.controller';
 import { validateRequest } from '@/middleware/validation';
 import { asyncHandler } from '@/middleware/asyncHandler';
@@ -29,7 +29,7 @@ export class UserRoutes {
                         limit: UserValidation.query.list.shape.limit,
                     }),
             }),
-            asyncHandler(this.userController.searchUsers)
+            asyncHandler((req: Request, res: Response) => this.userController.searchUsers(req, res))
         );
 
         // Get all users with filtering and pagination
@@ -38,7 +38,7 @@ export class UserRoutes {
             validateRequest({
                 query: UserValidation.query.list,
             }),
-            asyncHandler(this.userController.getUsers)
+            asyncHandler((req: Request, res: Response) => this.userController.getUsers(req, res))
         );
 
         // Get user by ID
@@ -47,7 +47,7 @@ export class UserRoutes {
             validateRequest({
                 params: UserValidation.params.id,
             }),
-            asyncHandler(this.userController.getUserById)
+            asyncHandler((req: Request, res: Response) => this.userController.getUserById(req, res))
         );
 
         // Get user statistics
@@ -56,7 +56,9 @@ export class UserRoutes {
             validateRequest({
                 params: UserValidation.params.id,
             }),
-            asyncHandler(this.userController.getUserStats)
+            asyncHandler((req: Request, res: Response) =>
+                this.userController.getUserStats(req, res)
+            )
         );
 
         // Create new user
@@ -65,7 +67,7 @@ export class UserRoutes {
             validateRequest({
                 body: UserValidation.body.create,
             }),
-            asyncHandler(this.userController.createUser)
+            asyncHandler((req: Request, res: Response) => this.userController.createUser(req, res))
         );
 
         // Update user
@@ -75,7 +77,7 @@ export class UserRoutes {
                 params: UserValidation.params.id,
                 body: UserValidation.body.update,
             }),
-            asyncHandler(this.userController.updateUser)
+            asyncHandler((req: Request, res: Response) => this.userController.updateUser(req, res))
         );
 
         // Update user profile
@@ -85,7 +87,9 @@ export class UserRoutes {
                 params: UserValidation.params.id,
                 body: UserValidation.body.updateProfile,
             }),
-            asyncHandler(this.userController.updateUserProfile)
+            asyncHandler((req: Request, res: Response) =>
+                this.userController.updateUserProfile(req, res)
+            )
         );
 
         // Delete user
@@ -94,7 +98,7 @@ export class UserRoutes {
             validateRequest({
                 params: UserValidation.params.id,
             }),
-            asyncHandler(this.userController.deleteUser)
+            asyncHandler((req: Request, res: Response) => this.userController.deleteUser(req, res))
         );
     }
 

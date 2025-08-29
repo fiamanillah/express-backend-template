@@ -12,6 +12,8 @@ import {
 
 export interface UserWithProfile extends User {
     profile: Profile | null;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface UserFilters {
@@ -279,7 +281,7 @@ export class UserService extends BaseService<User, CreateUserInput, UpdateUserIn
             },
             include: { profile: true },
             take: limit,
-            orderBy: { createdAt: 'desc' },
+            orderBy: { id: 'desc' }, // Changed from createdAt to id
         });
 
         AppLogger.info('Users searched successfully', {
@@ -288,5 +290,9 @@ export class UserService extends BaseService<User, CreateUserInput, UpdateUserIn
         });
 
         return users as UserWithProfile[];
+    }
+
+    async count() {
+        return await this.getModel().count();
     }
 }
