@@ -1,4 +1,6 @@
+// src/index.ts
 import { IgnitorApp } from './core/IgnitorApp';
+import { UserModule } from './modules/User/UserModule';
 import { AppLogger } from './core/logging/logger';
 import { config } from './core/config';
 
@@ -10,8 +12,12 @@ async function bootstrap() {
         // Initialize the Ignitor application
         const app = new IgnitorApp();
 
+        AppLogger.info('🔧 Registering modules...');
+
         // Register application modules
-        // TODO: Add your modules here when needed
+        app.registerModule(new UserModule());
+
+        AppLogger.info('✅ All modules registered successfully');
 
         // Start the server
         await app.spark(config.server.port);

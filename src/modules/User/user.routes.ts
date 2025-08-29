@@ -20,14 +20,7 @@ export class UserRoutes {
         this.router.get(
             '/search',
             validateRequest({
-                query: UserValidation.query.list
-                    .pick({
-                        search: true,
-                    })
-                    .extend({
-                        q: UserValidation.query.list.shape.search.optional(), // Allow 'q' as alias for search
-                        limit: UserValidation.query.list.shape.limit,
-                    }),
+                query: UserValidation.query.search,
             }),
             asyncHandler((req: Request, res: Response) => this.userController.searchUsers(req, res))
         );

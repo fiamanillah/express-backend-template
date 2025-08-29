@@ -15,7 +15,8 @@ export class UserController extends BaseController {
      * GET /api/users
      */
     public getUsers = async (req: Request, res: Response) => {
-        const query = req.query as any; // Validated by middleware
+        // Use validated query if available, fallback to req.query
+        const query = (req as any).validatedQuery || req.query;
         this.logAction('getUsers', req, { query });
 
         const result = await this.userService.getUsers(query);
@@ -46,7 +47,8 @@ export class UserController extends BaseController {
      * GET /api/users/:id
      */
     public getUserById = async (req: Request, res: Response) => {
-        const { id } = req.params; // Validated by middleware
+        const params = (req as any).validatedParams || req.params;
+        const { id } = params;
         const userId = parseInt(id);
 
         this.logAction('getUserById', req, { userId });
@@ -60,7 +62,7 @@ export class UserController extends BaseController {
      * POST /api/users
      */
     public createUser = async (req: Request, res: Response) => {
-        const body = req.body as any; // Validated by middleware
+        const body = (req as any).validatedBody || req.body;
         this.logAction('createUser', req, { email: body.email });
 
         const user = await this.userService.createUser(body);
@@ -72,8 +74,9 @@ export class UserController extends BaseController {
      * PUT /api/users/:id
      */
     public updateUser = async (req: Request, res: Response) => {
-        const { id } = req.params; // Validated by middleware
-        const body = req.body as any; // Validated by middleware
+        const params = (req as any).validatedParams || req.params;
+        const body = (req as any).validatedBody || req.body;
+        const { id } = params;
         const userId = parseInt(id);
 
         this.logAction('updateUser', req, { userId, updatedFields: Object.keys(body) });
@@ -87,8 +90,9 @@ export class UserController extends BaseController {
      * PUT /api/users/:id/profile
      */
     public updateUserProfile = async (req: Request, res: Response) => {
-        const { id } = req.params; // Validated by middleware
-        const body = req.body as any; // Validated by middleware
+        const params = (req as any).validatedParams || req.params;
+        const body = (req as any).validatedBody || req.body;
+        const { id } = params;
         const userId = parseInt(id);
 
         this.logAction('updateUserProfile', req, { userId });
@@ -102,7 +106,8 @@ export class UserController extends BaseController {
      * DELETE /api/users/:id
      */
     public deleteUser = async (req: Request, res: Response) => {
-        const { id } = req.params; // Validated by middleware
+        const params = (req as any).validatedParams || req.params;
+        const { id } = params;
         const userId = parseInt(id);
 
         this.logAction('deleteUser', req, { userId });
@@ -116,7 +121,8 @@ export class UserController extends BaseController {
      * GET /api/users/:id/stats
      */
     public getUserStats = async (req: Request, res: Response) => {
-        const { id } = req.params; // Validated by middleware
+        const params = (req as any).validatedParams || req.params;
+        const { id } = params;
         const userId = parseInt(id);
 
         this.logAction('getUserStats', req, { userId });
@@ -130,15 +136,22 @@ export class UserController extends BaseController {
      * GET /api/users/search
      */
     public searchUsers = async (req: Request, res: Response) => {
-        const { q: searchTerm, limit = '10' } = req.query;
+        const query = (req as any).validatedQuery || req.query;
+        const { q: searchTerm, search, limit = '10' } = query;
 
-        if (!searchTerm || typeof searchTerm !== 'string') {
+        // Support both 'q' and 'search' parameters
+        const finalSearchTerm = searchTerm || search;
+
+        if (!finalSearchTerm || typeof finalSearchTerm !== 'string') {
             throw new NotFoundError('Search term is required');
         }
 
-        this.logAction('searchUsers', req, { searchTerm, limit });
+        this.logAction('searchUsers', req, { searchTerm: finalSearchTerm, limit });
 
-        const users = await this.userService.searchUsers(searchTerm, parseInt(limit as string));
+        const users = await this.userService.searchUsers(
+            finalSearchTerm,
+            parseInt(limit as string)
+        );
         return this.sendResponse(res, users, 'Users searched successfully');
     };
 }

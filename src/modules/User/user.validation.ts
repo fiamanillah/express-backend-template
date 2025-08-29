@@ -1,6 +1,18 @@
 // src/modules/User/user.validation.ts
 import { z } from 'zod';
 
+// Helper to transform string numbers safely
+const stringToNumber = (val: unknown) => {
+    if (typeof val === 'string') {
+        const num = parseInt(val);
+        return isNaN(num) ? undefined : num;
+    }
+    if (typeof val === 'number') {
+        return val;
+    }
+    return undefined;
+};
+
 // Common validation schemas
 export const UserValidation = {
     // ID parameter validation
@@ -10,33 +22,46 @@ export const UserValidation = {
         }),
     },
 
-    // Query parameter validation
+    // Query parameter validation for listing users
     query: {
         list: z
             .object({
-                page: z
-                    .string()
-                    .optional()
-                    .transform(val => (val ? parseInt(val) : 1)),
-                limit: z
-                    .string()
-                    .optional()
-                    .transform(val => (val ? Math.min(parseInt(val) || 10, 100) : 10)),
+                page: z.preprocess(
+                    val => stringToNumber(val) || 1,
+                    z.number().int().min(1).default(1)
+                ),
+                limit: z.preprocess(val => {
+                    const num = stringToNumber(val) || 10;
+                    return Math.min(Math.max(num, 1), 100); // Clamp between 1-100
+                }, z.number().int().min(1).max(100).default(10)),
                 search: z.string().optional(),
-                email: z.string().email().optional(),
-                sortBy: z.enum(['id', 'name', 'email', 'createdAt']).optional(),
-                sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+                email: z.string().email().optional().or(z.literal('')),
+                sortBy: z.enum(['id', 'name', 'email', 'createdAt']).default('createdAt'),
+                sortOrder: z.enum(['asc', 'desc']).default('desc'),
             })
-            .refine(
-                data => {
-                    if (data.page && data.page < 1) return false;
-                    if (data.limit && (data.limit < 1 || data.limit > 100)) return false;
-                    return true;
-                },
-                {
-                    message: 'Invalid pagination parameters',
-                }
-            ),
+            .transform(data => {
+                // Clean up empty strings
+                return {
+                    ...data,
+                    email: data.email === '' ? undefined : data.email,
+                    search: data.search === '' ? undefined : data.search,
+                };
+            }),
+
+        // Search-specific validation
+        search: z
+            .object({
+                q: z.string().min(1, 'Search term is required').optional(),
+                search: z.string().min(1, 'Search term is required').optional(),
+                limit: z.preprocess(val => {
+                    const num = stringToNumber(val) || 10;
+                    return Math.min(Math.max(num, 1), 50); // Limit search results
+                }, z.number().int().min(1).max(50).default(10)),
+            })
+            .refine(data => data.q || data.search, {
+                message: 'Either "q" or "search" parameter is required',
+                path: ['q'],
+            }),
     },
 
     // Body validation schemas
@@ -66,7 +91,7 @@ export const UserValidation = {
                     })
                     .optional(),
             })
-            .strict(), // Reject unknown properties
+            .strict(),
 
         update: z
             .object({
@@ -103,4 +128,5 @@ export type CreateUserInput = z.infer<typeof UserValidation.body.create>;
 export type UpdateUserInput = z.infer<typeof UserValidation.body.update>;
 export type UpdateUserProfileInput = z.infer<typeof UserValidation.body.updateProfile>;
 export type UserListQuery = z.infer<typeof UserValidation.query.list>;
+export type UserSearchQuery = z.infer<typeof UserValidation.query.search>;
 export type UserIdParams = z.infer<typeof UserValidation.params.id>;

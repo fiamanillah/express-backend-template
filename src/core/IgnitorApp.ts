@@ -16,6 +16,7 @@ import { requestLogger } from '@/middleware/requestLogger';
 import { HTTPStatusCode } from '@/types/HTTPStatusCode';
 import { asyncHandler } from '@/middleware/asyncHandler';
 import { notFoundHandler } from '@/middleware/notFound';
+import { BaseModule } from './BaseModule';
 
 export class IgnitorApp {
     private app: Express;
@@ -183,6 +184,17 @@ export class IgnitorApp {
         AppLogger.info(`🧩 Registered module: ${module.name}`);
     }
 
+    private async registerModuleRoutes(): Promise<void> {
+        // Register routes from all modules
+        for (const module of this.modules) {
+            if (module instanceof BaseModule) {
+                const moduleRouter = module.getRouter();
+                this.app.use('/', moduleRouter);
+                AppLogger.info(`🛣️ Registered routes for module: ${module.name}`);
+            }
+        }
+    }
+
     private sortModulesByDependencies(): IgnitorModule[] {
         const sorted: IgnitorModule[] = [];
         const visited: Set<string> = new Set();
@@ -262,6 +274,9 @@ export class IgnitorApp {
 
             AppLogger.info('🔧 Initializing modules...');
             await this.initializeModules();
+
+            AppLogger.info('🛣️ Registering module routes...');
+            await this.registerModuleRoutes();
 
             // 404 handler (must be after all routes but before error handler)
             this.app.use(notFoundHandler());
