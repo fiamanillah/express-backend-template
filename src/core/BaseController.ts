@@ -5,13 +5,13 @@ import { HTTPStatusCode } from '@/types/HTTPStatusCode';
 
 export interface ApiResponse<T = any> {
     success: boolean;
-    data?: T;
     message?: string;
     meta?: {
         requestId: string;
         timestamp: string;
         [key: string]: any;
     };
+    data?: T;
 }
 
 export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
@@ -33,18 +33,18 @@ export abstract class BaseController {
      */
     protected sendResponse<T>(
         res: Response,
-        data: T,
         message?: string,
-        statusCode: HTTPStatusCode = HTTPStatusCode.OK
+        statusCode: HTTPStatusCode = HTTPStatusCode.OK,
+        data?: T
     ): Response<ApiResponse<T>> {
         const response: ApiResponse<T> = {
             success: true,
-            data,
             message,
             meta: {
                 requestId: (res.req as any).id,
                 timestamp: new Date().toISOString(),
             },
+            data,
         };
 
         return res.status(statusCode).json(response);
@@ -55,19 +55,19 @@ export abstract class BaseController {
      */
     protected sendPaginatedResponse<T>(
         res: Response,
-        data: T[],
         pagination: PaginatedResponse<T>['meta']['pagination'],
-        message?: string
+        message?: string,
+        data?: T[]
     ): Response<PaginatedResponse<T>> {
         const response: PaginatedResponse<T> = {
             success: true,
-            data,
             message,
             meta: {
                 requestId: (res.req as any).id,
                 timestamp: new Date().toISOString(),
                 pagination,
             },
+            data,
         };
 
         return res.status(HTTPStatusCode.OK).json(response);
@@ -81,7 +81,7 @@ export abstract class BaseController {
         data: T,
         message: string = 'Resource created successfully'
     ): Response<ApiResponse<T>> {
-        return this.sendResponse(res, data, message, HTTPStatusCode.CREATED);
+        return this.sendResponse(res, message, HTTPStatusCode.CREATED, data);
     }
 
     /**

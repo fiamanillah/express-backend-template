@@ -4,6 +4,7 @@ import { BaseController } from '@/core/BaseController';
 import { UserService } from './user.service';
 import { AppLogger } from '@/core/logging/logger';
 import { NotFoundError } from '@/core/errors/AppError';
+import { HTTPStatusCode } from '@/types/HTTPStatusCode';
 
 export class UserController extends BaseController {
     constructor(private userService: UserService) {
@@ -25,7 +26,6 @@ export class UserController extends BaseController {
             // Paginated response
             return this.sendPaginatedResponse(
                 res,
-                result.data,
                 {
                     page: result.page,
                     limit: result.limit,
@@ -34,11 +34,17 @@ export class UserController extends BaseController {
                     hasNext: result.hasNext,
                     hasPrevious: result.hasPrevious,
                 },
-                'Users retrieved successfully'
+                'Users retrieved successfully',
+                result.data
             );
         } else {
             // Non-paginated response
-            return this.sendResponse(res, result, 'Users retrieved successfully');
+            return this.sendResponse(
+                res,
+                'Users retrieved successfully',
+                HTTPStatusCode.OK,
+                result
+            );
         }
     };
 
@@ -54,7 +60,7 @@ export class UserController extends BaseController {
         this.logAction('getUserById', req, { userId });
 
         const user = await this.userService.getUserById(userId);
-        return this.sendResponse(res, user, 'User retrieved successfully');
+        return this.sendResponse(res, 'User retrieved successfully', HTTPStatusCode.OK, user);
     };
 
     /**
@@ -82,7 +88,7 @@ export class UserController extends BaseController {
         this.logAction('updateUser', req, { userId, updatedFields: Object.keys(body) });
 
         const user = await this.userService.updateUser(userId, body);
-        return this.sendResponse(res, user, 'User updated successfully');
+        return this.sendResponse(res, 'User updated successfully', HTTPStatusCode.OK, user);
     };
 
     /**
@@ -98,7 +104,12 @@ export class UserController extends BaseController {
         this.logAction('updateUserProfile', req, { userId });
 
         const profile = await this.userService.updateUserProfile(userId, body);
-        return this.sendResponse(res, profile, 'User profile updated successfully');
+        return this.sendResponse(
+            res,
+            'User profile updated successfully',
+            HTTPStatusCode.OK,
+            profile
+        );
     };
 
     /**
@@ -128,7 +139,12 @@ export class UserController extends BaseController {
         this.logAction('getUserStats', req, { userId });
 
         const stats = await this.userService.getUserStats(userId);
-        return this.sendResponse(res, stats, 'User statistics retrieved successfully');
+        return this.sendResponse(
+            res,
+            'User statistics retrieved successfully',
+            HTTPStatusCode.OK,
+            stats
+        );
     };
 
     /**
@@ -152,6 +168,6 @@ export class UserController extends BaseController {
             finalSearchTerm,
             parseInt(limit as string)
         );
-        return this.sendResponse(res, users, 'Users searched successfully');
+        return this.sendResponse(res, 'Users searched successfully', HTTPStatusCode.OK, users);
     };
 }
