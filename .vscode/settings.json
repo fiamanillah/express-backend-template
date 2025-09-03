@@ -1,0 +1,44 @@
+{
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#582997",
+        "activityBar.background": "#582997",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#000000",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "commandCenter.border": "#e7e7e799",
+        "editorGroup.border": "#582997",
+        "panel.border": "#582997",
+        "sash.hoverBorder": "#582997",
+        "sideBar.border": "#582997",
+        "statusBar.background": "#582997",
+        "statusBar.border": "#582997",
+        "statusBar.debuggingBackground": "#689729",
+        "statusBar.debuggingBorder": "#689729",
+        "statusBar.debuggingForeground": "#e7e7e7",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#6f34bf",
+        "statusBarItem.remoteBackground": "#582997",
+        "statusBarItem.remoteForeground": "#e7e7e7",
+        "tab.activeBorder": "#582997",
+        "titleBar.activeBackground": "#582997",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.border": "#582997",
+        "titleBar.inactiveBackground": "#58299799",
+        "titleBar.inactiveForeground": "#e7e7e799"
+    },
+    "peacock.color": "#7034bf",
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "103.161.9.29",
+            "port": 4565,
+            "driver": "PostgreSQL",
+            "name": "test",
+            "group": "test",
+            "database": "test",
+            "username": "test",
+            "password": "test"
+        }
+    ]
+}
