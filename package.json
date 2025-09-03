@@ -3,9 +3,9 @@
     "module": "index.ts",
     "type": "module",
     "scripts": {
-        "dev": "bun run --watch src/index.ts",
+        "dev": "NODE_ENV=development bun run --watch src/index.ts",
         "build": "bun build src/index.ts --target node --outdir dist",
-        "start": "NODE_ENV=production bun dist/index.js",
+        "start": "NODE_ENV=production bun run dist/index.js",
         "test": "NODE_ENV=test bun test",
         "db:generate": "prisma generate",
         "db:migrate": "prisma migrate dev",
@@ -27,6 +27,7 @@
     },
     "dependencies": {
         "@prisma/client": "^6.15.0",
+        "bcrypt": "^6.0.0",
         "chalk": "^5.6.0",
         "compression": "^1.8.1",
         "cors": "^2.8.5",
@@ -44,6 +45,7 @@
         "zod": "^4.1.1"
     },
     "devDependencies": {
+        "@types/bcrypt": "^6.0.0",
         "@types/bun": "latest",
         "@types/compression": "^1.8.1",
         "@types/cors": "^2.8.19",

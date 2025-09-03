@@ -67,13 +67,13 @@ export class UserController extends BaseController {
      * Create a new user
      * POST /api/users
      */
-    public createUser = async (req: Request, res: Response) => {
-        const body = (req as any).validatedBody || req.body;
-        this.logAction('createUser', req, { email: body.email });
+    // public createUser = async (req: Request, res: Response) => {
+    //     const body = (req as any).validatedBody || req.body;
+    //     this.logAction('createUser', req, { email: body.email });
 
-        const user = await this.userService.createUser(body);
-        return this.sendCreatedResponse(res, user, 'User created successfully');
-    };
+    //     const user = await this.userService.createUser(body);
+    //     return this.sendCreatedResponse(res, user, 'User created successfully');
+    // };
 
     /**
      * Update a user

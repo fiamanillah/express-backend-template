@@ -8,8 +8,8 @@ export interface JWTPayload {
     id: string;
     email: string;
     role: string;
-    iat: number;
-    exp: number;
+    iat?: number;
+    exp?: number;
 }
 
 export interface RequestWithUser extends Request {
@@ -38,8 +38,12 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
         if (!config.security.jwt.secret) {
             throw new Error('JWT secret is not defined in the environment');
         }
+        console.log(config.security.jwt.secret);
+        console.log('Verifying token...', token);
 
         const decoded = jwt.verify(token, config.security.jwt.secret) as JWTPayload;
+
+        console.log('Decoded token:', decoded);
 
         if (!decoded) {
             throw new AuthenticationError('Invalid authentication token');
@@ -57,6 +61,8 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 
         next();
     } catch (error) {
+        console.error('JWT verification failed:', error);
+
         if (error instanceof jwt.JsonWebTokenError) {
             throw new AuthenticationError('Invalid authentication token');
         }
@@ -112,4 +118,68 @@ export const authorize = (...roles: string[]) => {
         });
         next();
     };
+};
+
+/**
+ * Middleware to check if user can access their own resource or has admin role
+ */
+
+export const authorizeOwnerOrAdmin = (userIdParams: string = 'id') => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const currentUserId = req.userId;
+        const targetUserId = req.params[userIdParams];
+        const userRole = req.userRole;
+
+        if (!currentUserId) {
+            throw new AuthenticationError('User not authenticated');
+        }
+
+        if (userRole === 'admin' || currentUserId === targetUserId) {
+            AppLogger.debug('Owner/admin authorized successfully', {
+                userId: (req as any).userId,
+                userRole,
+                requestId: (req as any).id,
+            });
+            return next();
+        } else {
+            AppLogger.warn(`Owner/Admin authorization failed`, {
+                requestId: req.id,
+                userId: req.userId,
+                userRole,
+            });
+            throw new AuthorizationError(
+                `Access denied. You can only access your own resources or need admin privileges`
+            );
+        }
+    };
+};
+
+/**
+ * Optional authentication - doesn't throw error if no token
+ */
+
+export const optionalAuth = (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader) {
+            return next();
+        }
+
+        const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+
+        if (!token || !config.security.jwt.secret) {
+            return next();
+        }
+
+        const decoded = jwt.verify(token, config.security.jwt.secret) as JWTPayload;
+
+        // Attach user info to request object
+        req.userId = decoded.id;
+        req.userRole = decoded.role;
+        (req as any).user = decoded;
+    } catch (error) {
+        // For optional auth, we don't throw errors, just proceed without auth
+        next();
+    }
 };

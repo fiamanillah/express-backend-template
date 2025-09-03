@@ -62,7 +62,8 @@ export class UserService extends BaseService<User, CreateUserInput, UpdateUserIn
             filters,
             { page, limit, offset },
             { profile: true }, // Include profile
-            orderBy
+            orderBy,
+            { password: true }
         );
 
         AppLogger.info('Users retrieved successfully', {
@@ -104,50 +105,52 @@ export class UserService extends BaseService<User, CreateUserInput, UpdateUserIn
     /**
      * Create a new user
      */
-    async createUser(data: CreateUserInput): Promise<UserWithProfile> {
-        // Check if user already exists
-        const existingUser = await this.getUserByEmail(data.email);
-        if (existingUser) {
-            throw new ConflictError('User with this email already exists');
-        }
+    // async createUser(data: CreateUserInput): Promise<UserWithProfile> {
+    //     // Check if user already exists
+    //     const existingUser = await this.getUserByEmail(data.email);
+    //     if (existingUser) {
+    //         throw new ConflictError('User with this email already exists');
+    //     }
 
-        // Use transaction to create user with profile if provided
-        const user = await this.transaction(async tx => {
-            // Create user
-            const newUser = await tx.user.create({
-                data: {
-                    email: data.email,
-                    name: data.name,
-                },
-                include: { profile: true },
-            });
+    //     // Use transaction to create user with profile if provided
+    //     const user = await this.transaction(async tx => {
+    //         // Create user
+    //         const newUser = await tx.user.create({
+    //             data: {
+    //                 email: data.email,
+    //                 name: data.name,
+    //                 password: data.password,
+    //                 role: data.role,
+    //             },
+    //             include: { profile: true },
+    //         });
 
-            // Create profile if provided
-            if (data.profile) {
-                await tx.profile.create({
-                    data: {
-                        userId: newUser.id,
-                        bio: data.profile.bio,
-                    },
-                });
+    //         // Create profile if provided
+    //         if (data.profile) {
+    //             await tx.profile.create({
+    //                 data: {
+    //                     userId: newUser.id,
+    //                     bio: data.profile.bio,
+    //                 },
+    //             });
 
-                // Fetch user with profile
-                return tx.user.findUnique({
-                    where: { id: newUser.id },
-                    include: { profile: true },
-                });
-            }
+    //             // Fetch user with profile
+    //             return tx.user.findUnique({
+    //                 where: { id: newUser.id },
+    //                 include: { profile: true },
+    //             });
+    //         }
 
-            return newUser;
-        });
+    //         return newUser;
+    //     });
 
-        AppLogger.info('User created successfully', {
-            userId: user!.id,
-            email: data.email,
-        });
+    //     AppLogger.info('User created successfully', {
+    //         userId: user!.id,
+    //         email: data.email,
+    //     });
 
-        return user as UserWithProfile;
-    }
+    //     return user as UserWithProfile;
+    // }
 
     /**
      * Update a user

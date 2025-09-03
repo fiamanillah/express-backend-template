@@ -57,7 +57,8 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
         filters: any = {},
         pagination?: PaginationOptions,
         include?: any,
-        orderBy?: any
+        orderBy?: any,
+        omit?: any
     ): Promise<TModel[] | PaginationResult<TModel>> {
         try {
             const where = this.buildWhereClause(filters);
@@ -70,6 +71,7 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
                         orderBy,
                         skip: pagination.offset,
                         take: pagination.limit,
+                        omit,
                     }),
                     this.getModel().count({ where }),
                 ]);
@@ -91,6 +93,7 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
                 where,
                 include,
                 orderBy,
+                omit,
             });
 
             return result as TModel[];
@@ -120,13 +123,14 @@ export abstract class BaseService<TModel = any, TCreateInput = any, TUpdateInput
     /**
      * Find a single record by filters
      */
-    protected async findOne(filters: any, include?: any): Promise<TModel | null> {
+    protected async findOne(filters: any, include?: any, omit?: any): Promise<TModel | null> {
         try {
             const where = this.buildWhereClause(filters);
 
             const result = await this.getModel().findFirst({
                 where,
                 include,
+                omit,
             });
 
             return result as TModel | null;

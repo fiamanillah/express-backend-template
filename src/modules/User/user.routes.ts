@@ -4,7 +4,7 @@ import { UserController } from './user.controller';
 import { validateRequest } from '@/middleware/validation';
 import { asyncHandler } from '@/middleware/asyncHandler';
 import { UserValidation } from './user.validation';
-import { authenticate } from '@/middleware/auth';
+import { authenticate, authorizeOwnerOrAdmin } from '@/middleware/auth';
 
 export class UserRoutes {
     private router: Router;
@@ -39,6 +39,7 @@ export class UserRoutes {
         this.router.get(
             '/:id',
             authenticate,
+            authorizeOwnerOrAdmin('id'),
             validateRequest({
                 params: UserValidation.params.id,
             }),
@@ -57,13 +58,13 @@ export class UserRoutes {
         );
 
         // Create new user
-        this.router.post(
-            '/',
-            validateRequest({
-                body: UserValidation.body.create,
-            }),
-            asyncHandler((req: Request, res: Response) => this.userController.createUser(req, res))
-        );
+        // this.router.post(
+        //     '/',
+        //     validateRequest({
+        //         body: UserValidation.body.create,
+        //     }),
+        //     asyncHandler((req: Request, res: Response) => this.userController.createUser(req, res))
+        // );
 
         // Update user
         this.router.put(
