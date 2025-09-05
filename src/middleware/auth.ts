@@ -38,12 +38,8 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
         if (!config.security.jwt.secret) {
             throw new Error('JWT secret is not defined in the environment');
         }
-        console.log(config.security.jwt.secret);
-        console.log('Verifying token...', token);
 
         const decoded = jwt.verify(token, config.security.jwt.secret) as JWTPayload;
-
-        console.log('Decoded token:', decoded);
 
         if (!decoded) {
             throw new AuthenticationError('Invalid authentication token');

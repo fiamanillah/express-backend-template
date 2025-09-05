@@ -7,49 +7,26 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  role      Role     @default(user)
-  status    String?
-  password  String   @default("")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  profile Profile?
-  posts   Post[]
-
-  @@map("users")
-}
-
 enum Role {
   user
   admin
 }
 
-model Profile {
-  id     Int     @id @default(autoincrement())
-  bio    String?
-  userId Int     @unique
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("profiles")
+model User {
+  id                String    @id @default(uuid()) @db.Uuid
+  email             String    @unique @db.VarChar(255)
+  password          String    @map("password") @db.VarChar(255)
+  firstName         String    @map("first_name") @db.VarChar(100)
+  lastName          String    @map("last_name") @db.VarChar(100)
+  role              Role      @map("role") @default(user)
+  bio               String?   @db.Text
+  instagramId       String?   @map("instagram_id") @db.VarChar(100)
+  profilePictureUrl String?   @map("profile_picture_url") @db.VarChar(500)
+  isActive          Boolean   @default(true) @map("is_active")
+  isVerified        Boolean   @default(false) @map("is_verified")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  // Relations
-  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  @@map("posts")
-}
+ 
