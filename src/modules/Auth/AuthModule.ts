@@ -171,7 +171,8 @@ export class AuthModule extends BaseModule {
                 await this.authService.register({
                     email: defaultAdminEmail,
                     password: defaultAdminPassword,
-                    name: 'System Administrator',
+                    firstName: 'Admin',
+                    lastName: 'User',
                     role: 'admin',
                 });
 

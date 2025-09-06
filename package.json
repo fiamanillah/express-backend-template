@@ -4,7 +4,7 @@
     "type": "module",
     "scripts": {
         "dev": "NODE_ENV=development bun run --watch src/index.ts",
-        "build": "bun build src/index.ts --target node --outdir dist",
+        "build": "NODE_ENV=production bun build src/index.ts --target node --outdir dist",
         "start": "NODE_ENV=production bun run dist/index.js",
         "test": "NODE_ENV=test bun test",
         "db:generate": "prisma generate",

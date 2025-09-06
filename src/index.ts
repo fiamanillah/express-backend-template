@@ -3,7 +3,7 @@ import { IgnitorApp } from './core/IgnitorApp';
 import { UserModule } from './modules/User/UserModule';
 import { AppLogger } from './core/logging/logger';
 import { config } from './core/config';
-import { AuthModule } from './modules/auth/AuthModule';
+import { AuthModule } from './modules/Auth/AuthModule';
 
 // Main application bootstrap function
 async function bootstrap() {

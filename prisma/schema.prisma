@@ -8,48 +8,56 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  role      Role     @default(user)
-  status    String?
-  password  String   @default("")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  profile Profile?
-  posts   Post[]
-
-  @@map("users")
-}
-
 enum Role {
   user
   admin
 }
 
-model Profile {
-  id     Int     @id @default(autoincrement())
-  bio    String?
-  userId Int     @unique
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("profiles")
+enum Status {
+  active
+  inactive
 }
-
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  Int
+model User {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String   @unique
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  role      Role     @default(user)
+  status    Status   @default(active)
+  password  String   @default("")
+  bio       String?  
+  instagram String?
+  avatar    String?
+  isEmailVerified Boolean @map("is_email_verified")@default(false)
+  stripeCustomerId String?  @map("stripe_customer_id")  
+  rewardFullAffiliateId String?  @map("reward_full_affiliate_id")
+  isDeleted Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
-  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  @@map("posts")
+  @@map("users")
 }
+
+model Course {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title     String
+  slug      String   @unique
+  description String?
+  shortDescription String? @map("short_description")
+  thumbnailUrl String?  @map("thumbnail_url")
+  diffucultyLevel String?  @map("diffuculty_level")
+  estimatedDuration String?  @map("estimated_duration")
+  isPublished Boolean @map("is_published")@default(false)
+  basePrice Decimal @map("base_price")
+  discount Decimal?
+  discounedPrice Decimal? @map("discouned_price")
+  hasCertification Boolean @map("has_certification")
+  passPercentage Decimal? @map("pass_percentage")@default(70)
+  isDeleted Boolean @map("is_deleted")@default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+
+  @@map("courses")
+}
+

@@ -30,12 +30,19 @@ export const AuthValidation = {
                 .trim(),
             password: passwordSchema,
             confirmPassword: z.string(),
-            name: z
+            firstName: z
                 .string()
-                .min(2, 'Name must be at least 2 characters')
-                .max(100, 'Name must not exceed 100 characters')
+                .min(2, 'First name must be at least 2 characters')
+                .max(100, 'First name must not exceed 100 characters')
                 .trim()
                 .optional(),
+            lastName: z
+                .string()
+                .min(2, 'Last name must be at least 2 characters')
+                .max(100, 'Last name must not exceed 100 characters')
+                .trim()
+                .optional(),
+
             role: roleSchema.optional().default('user'),
         })
         .strict()

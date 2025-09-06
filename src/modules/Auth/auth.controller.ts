@@ -14,7 +14,7 @@ export class AuthController extends BaseController {
      * POST /api/auth/register
      */
     public register = async (req: Request, res: Response) => {
-        const body = (req as any).validatedBody || req.body;
+        const body = req.validatedBody || req.body;
         this.logAction('register', req, { email: body.email, role: body.role });
 
         const result = await this.authService.register(body);
@@ -27,7 +27,7 @@ export class AuthController extends BaseController {
      * POST /api/auth/login
      */
     public login = async (req: Request, res: Response) => {
-        const body = (req as any).validatedBody || req.body;
+        const body = req.validatedBody || req.body;
         this.logAction('login', req, { email: body.email });
 
         const result = await this.authService.login(body);
@@ -83,7 +83,7 @@ export class AuthController extends BaseController {
      * POST /api/auth/refresh
      */
     public refreshToken = async (req: Request, res: Response) => {
-        const body = (req as any).validatedBody || req.body;
+        const body = req.validatedBody || req.body;
         const currentToken = body.token || req.headers.authorization?.replace('Bearer ', '');
 
         if (!currentToken) {
@@ -117,7 +117,7 @@ export class AuthController extends BaseController {
             return this.sendResponse(res, 'User not authenticated', HTTPStatusCode.UNAUTHORIZED);
         }
 
-        const body = (req as any).validatedBody || req.body;
+        const body = req.validatedBody || req.body;
         this.logAction('changePassword', req, { userId });
 
         await this.authService.changePassword(
@@ -134,8 +134,8 @@ export class AuthController extends BaseController {
      * PUT /api/auth/users/:userId/role
      */
     public updateUserRole = async (req: Request, res: Response) => {
-        const params = (req as any).validatedParams || req.params;
-        const body = (req as any).validatedBody || req.body;
+        const params = req.validatedParams || req.params;
+        const body = req.validatedBody || req.body;
         const { userId } = params;
         const currentUserId = this.getUserId(req);
 
@@ -187,8 +187,9 @@ export class AuthController extends BaseController {
             take: pagination.limit,
             select: {
                 id: true,
+                firstName: true,
+                lastName: true,
                 email: true,
-                name: true,
                 role: true,
                 status: true,
                 createdAt: true,

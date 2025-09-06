@@ -17,7 +17,7 @@ export class UserController extends BaseController {
      */
     public getUsers = async (req: Request, res: Response) => {
         // Use validated query if available, fallback to req.query
-        const query = (req as any).validatedQuery || req.query;
+        const query = req.validatedQuery || req.query;
         this.logAction('getUsers', req, { query });
 
         const result = await this.userService.getUsers(query);
@@ -53,7 +53,7 @@ export class UserController extends BaseController {
      * GET /api/users/:id
      */
     public getUserById = async (req: Request, res: Response) => {
-        const params = (req as any).validatedParams || req.params;
+        const params = req.validatedParams || req.params;
         const { id } = params;
         const userId = parseInt(id);
 
@@ -68,7 +68,7 @@ export class UserController extends BaseController {
      * POST /api/users
      */
     // public createUser = async (req: Request, res: Response) => {
-    //     const body = (req as any).validatedBody || req.body;
+    //     const body = req.validatedBody || req.body;
     //     this.logAction('createUser', req, { email: body.email });
 
     //     const user = await this.userService.createUser(body);
@@ -80,8 +80,8 @@ export class UserController extends BaseController {
      * PUT /api/users/:id
      */
     public updateUser = async (req: Request, res: Response) => {
-        const params = (req as any).validatedParams || req.params;
-        const body = (req as any).validatedBody || req.body;
+        const params = req.validatedParams || req.params;
+        const body = req.validatedBody || req.body;
         const { id } = params;
         const userId = parseInt(id);
 
@@ -96,8 +96,8 @@ export class UserController extends BaseController {
      * PUT /api/users/:id/profile
      */
     public updateUserProfile = async (req: Request, res: Response) => {
-        const params = (req as any).validatedParams || req.params;
-        const body = (req as any).validatedBody || req.body;
+        const params = req.validatedParams || req.params;
+        const body = req.validatedBody || req.body;
         const { id } = params;
         const userId = parseInt(id);
 
@@ -117,7 +117,7 @@ export class UserController extends BaseController {
      * DELETE /api/users/:id
      */
     public deleteUser = async (req: Request, res: Response) => {
-        const params = (req as any).validatedParams || req.params;
+        const params = req.validatedParams || req.params;
         const { id } = params;
         const userId = parseInt(id);
 
@@ -132,7 +132,7 @@ export class UserController extends BaseController {
      * GET /api/users/:id/stats
      */
     public getUserStats = async (req: Request, res: Response) => {
-        const params = (req as any).validatedParams || req.params;
+        const params = req.validatedParams || req.params;
         const { id } = params;
         const userId = parseInt(id);
 
@@ -152,7 +152,7 @@ export class UserController extends BaseController {
      * GET /api/users/search
      */
     public searchUsers = async (req: Request, res: Response) => {
-        const query = (req as any).validatedQuery || req.query;
+        const query = req.validatedQuery || req.query;
         const { q: searchTerm, search, limit = '10' } = query;
 
         // Support both 'q' and 'search' parameters

@@ -16,7 +16,8 @@ export interface LoginInput {
 export interface RegisterInput {
     email: string;
     password: string;
-    name?: string;
+    firstName?: string;
+    lastName?: string;
     role?: string;
 }
 
@@ -50,7 +51,7 @@ export class AuthService extends BaseService<User> {
      * Register a new user
      */
     async register(data: RegisterInput): Promise<AuthResponse> {
-        const { email, password, name, role = 'user' } = data;
+        const { email, password, firstName, lastName, role = 'user' } = data;
 
         // Check if user already exists
         const existingUser = await this.findOne({ email });
@@ -71,7 +72,8 @@ export class AuthService extends BaseService<User> {
         const user = await this.create({
             email,
             password: hashedPassword,
-            name,
+            firstName,
+            lastName,
             role,
         });
 

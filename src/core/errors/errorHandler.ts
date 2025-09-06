@@ -46,9 +46,7 @@ export function errorHandler() {
                 statusCode: appError.statusCode,
                 timestamp: new Date().toISOString(),
                 requestId: (req as any).id || 'unknown',
-                ...(process.env.NODE_ENV === 'development' && appError.details
-                    ? { details: appError.details }
-                    : {}),
+                ...(appError.details ? { details: appError.details } : {}),
                 ...(process.env.NODE_ENV === 'development' ? { stack: appError.stack } : {}),
             },
         };

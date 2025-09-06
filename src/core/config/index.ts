@@ -1,7 +1,9 @@
 import dotenv from 'dotenv';
 
 // Load environment variables
-dotenv.config({ override: false });
+const result = dotenv.config({
+    override: false, // Let scripts control NODE_ENV
+});
 
 // Validate and parse configuration
 export const config = {
